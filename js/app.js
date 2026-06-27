@@ -13,13 +13,24 @@ App.TITLE = "Makenna's Enchanted Garden";
 App.state = (function () {
   const KEY = "mge_state_v1";
   const DEFAULTS = {
-    muted: false,
+    volume: 0.85,
+    voiceName: null,
     letters: ["A", "B", "C", "D", "E"], // Letter Forest unlocked set
     memoryLevel: 4,                      // pairs in Royal Memory Match
+    traceUnlocked: 4,                    // Princess Trace: figures unlocked
+    tracesCompleted: 0,
+    animalsFound: [],                    // Animal Parade sticker book
+    colorBestLevel: 1,                   // Color Kingdom: best level reached
   };
   let data;
   try {
-    data = Object.assign({}, DEFAULTS, JSON.parse(localStorage.getItem(KEY) || "{}"));
+    const parsed = JSON.parse(localStorage.getItem(KEY) || "{}");
+    data = Object.assign({}, DEFAULTS, parsed);
+    // migrate from the old boolean mute toggle to a 0..1 volume
+    if (Object.prototype.hasOwnProperty.call(parsed, "muted") && !Object.prototype.hasOwnProperty.call(parsed, "volume")) {
+      data.volume = parsed.muted ? 0 : 0.85;
+    }
+    delete data.muted;
   } catch (e) {
     data = Object.assign({}, DEFAULTS);
   }
@@ -106,21 +117,73 @@ App.router = (function () {
   });
 })();
 
-/* ---------------- Mute toggle ---------------- */
-(function muteSetup() {
-  const btn = document.getElementById("mute-btn");
-  const icon = document.getElementById("mute-icon");
-  function apply() {
-    const muted = App.state.get("muted");
-    App.audio.setMuted(muted);
-    icon.textContent = muted ? "🔇" : "🔊";
+/* ---------------- Sound settings: volume slider + voice picker ---------------- */
+(function settingsSetup() {
+  const btn = document.getElementById("settings-btn");
+  const icon = document.getElementById("volume-icon");
+  const pop = document.getElementById("settings-pop");
+  const slider = document.getElementById("volume-slider");
+  const voiceList = document.getElementById("voice-list");
+
+  function iconFor(v) {
+    if (v <= 0) return "🔇";
+    if (v < 0.34) return "🔈";
+    if (v < 0.7) return "🔉";
+    return "🔊";
   }
+
+  function applyVolume(v01, persist) {
+    if (persist !== false) App.state.set("volume", v01);
+    App.audio.setVolume(v01);
+    icon.textContent = iconFor(v01);
+    slider.value = Math.round(v01 * 100);
+  }
+
+  function shortName(name) {
+    return name.replace(/^Microsoft |^Google /, "").split(" (")[0];
+  }
+
+  function renderVoices() {
+    const list = App.audio.listVoices();
+    voiceList.innerHTML = "";
+    if (!list.length) {
+      voiceList.appendChild(App.fx.el("div", { class: "voice-list__empty", text: "Loading voices…" }));
+      return;
+    }
+    const current = App.state.get("voiceName");
+    list.forEach((v) => {
+      const chip = App.fx.el(
+        "button",
+        {
+          class: "voice-chip" + (v.name === current ? " is-on" : ""),
+          text: shortName(v.name),
+          onclick: () => {
+            App.state.set("voiceName", v.name);
+            App.audio.setVoiceByName(v.name);
+            renderVoices();
+            App.audio.speak("Hi! This is my voice now.");
+          },
+        }
+      );
+      voiceList.appendChild(chip);
+    });
+  }
+
   btn.addEventListener("click", () => {
-    App.state.set("muted", !App.state.get("muted"));
-    apply();
-    if (!App.state.get("muted")) App.audio.play("tap");
+    const willShow = pop.hidden;
+    pop.hidden = !willShow;
+    if (willShow) renderVoices();
   });
-  apply();
+  document.addEventListener("pointerdown", (e) => {
+    if (!pop.hidden && !pop.contains(e.target) && e.target !== btn && !btn.contains(e.target)) {
+      pop.hidden = true;
+    }
+  });
+  slider.addEventListener("input", () => applyVolume(slider.value / 100));
+
+  applyVolume(App.state.get("volume"), false);
+  const savedVoice = App.state.get("voiceName");
+  if (savedVoice) App.audio.setVoiceByName(savedVoice);
 })();
 
 /* ---------------- First-tap audio unlock ---------------- */
@@ -132,7 +195,9 @@ App.router = (function () {
     if (started) return;
     started = true;
     App.audio.unlock();
-    App.audio.setMuted(App.state.get("muted"));
+    App.audio.setVolume(App.state.get("volume"));
+    const savedVoice = App.state.get("voiceName");
+    if (savedVoice) App.audio.setVoiceByName(savedVoice);
     veil.classList.add("hide");
     setTimeout(() => (veil.style.display = "none"), 600);
     App.audio.play("win");

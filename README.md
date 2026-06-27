@@ -16,7 +16,13 @@ self-contained — no external services, no audio/image files, no tracking.
 - **Voice** uses the browser's built-in speech (Web Speech API); **sounds and music**
   are generated live with the Web Audio API. That's why there are no media files.
 - Audio unlocks on the first tap (the "Tap to Begin" screen) — this satisfies iPad's
-  autoplay rules. There's a 🔊/🔇 button in the top-right to mute.
+  autoplay rules. There's a 🔊 button in the top-right that opens a volume slider and
+  a narrator voice picker (lists whatever voices are installed on the device).
+- **For the most natural-sounding narrator voice:** on the iPad, go to
+  Settings → Accessibility → Spoken Content → Voices → English, and download an
+  "Enhanced" or "Premium" voice (e.g. Samantha/Ava Enhanced). The default "Compact"
+  voices sound noticeably more robotic — this is an iOS setting, not something the
+  app can change on its own.
 - Progress (unlocked letters, memory level) is saved in the browser via `localStorage`.
 
 ## Run it locally (optional)

@@ -30,10 +30,23 @@
       <span class="round-btn__label">Home</span>
     </button>
     <div class="spacer"></div>
-    <button class="round-btn mute-btn" id="mute-btn" aria-label="Toggle sound">
-      <span class="round-btn__icon" id="mute-icon">🔊</span>
+    <button class="round-btn settings-btn" id="settings-btn" aria-label="Sound settings">
+      <span class="round-btn__icon" id="volume-icon">🔊</span>
     </button>
   </header>
+
+  <!-- Sound settings popover: volume slider + voice picker -->
+  <div class="settings-pop" id="settings-pop" hidden>
+    <div class="settings-pop__row">
+      <span class="settings-pop__label">🔈 Volume</span>
+      <input type="range" id="volume-slider" min="0" max="100" value="85" aria-label="Volume" />
+    </div>
+    <div class="settings-pop__row settings-pop__voices">
+      <span class="settings-pop__label">🎙️ Narrator Voice</span>
+      <div class="voice-list" id="voice-list"></div>
+      <p class="settings-pop__hint">For the most human-sounding voice, check iPad Settings → Accessibility → Spoken Content → Voices → English, and download an "Enhanced" or "Premium" voice.</p>
+    </div>
+  </div>
 
   <!-- HOME SCREEN -->
   <main class="screen home is-active" id="home">

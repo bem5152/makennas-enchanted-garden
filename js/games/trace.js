@@ -1,8 +1,11 @@
 /* =========================================================================
    GAME 2 — Princess Trace
-   A fairy guides her finger along a glowing dotted path (letters A/B/C and
-   shapes circle/star/heart). Glitter follows the finger; chimes as she goes;
-   big celebration when the whole path is traced. Pointer events for iPad.
+   A fairy guides her finger along a glowing dotted path (letters and
+   shapes). Glitter follows the finger; chimes as she goes; big celebration
+   when the whole path is traced. Pointer events for iPad.
+
+   Progression: starts with 4 figures unlocked; every 3 completed traces
+   unlocks the next one (persisted), mirroring Letter Forest's unlock model.
    ========================================================================= */
 (function () {
   window.App = window.App || {};
@@ -28,13 +31,20 @@
     }
     return p;
   }
+
+  // Ordered easiest-first — this order IS the unlock progression.
   const FIGS = [
-    { key: "A", label: "A", name: "letter A", verts: [[0.15, 0.92], [0.5, 0.08], [0.85, 0.92], [0.71, 0.55], [0.29, 0.55]] },
-    { key: "B", label: "B", name: "letter B", verts: [[0.27, 0.92], [0.27, 0.08], [0.6, 0.12], [0.7, 0.29], [0.6, 0.46], [0.3, 0.5], [0.64, 0.54], [0.74, 0.73], [0.62, 0.9], [0.27, 0.92]] },
-    { key: "C", label: "C", name: "letter C", verts: (function () { const p = []; for (let a = 60; a <= 300; a += 15) { const r = (a * Math.PI) / 180; p.push([0.5 + 0.4 * Math.cos(r), 0.5 - 0.4 * Math.sin(r)]); } return p; })() },
     { key: "circle", label: "⚪", name: "circle", verts: circlePts() },
     { key: "star", label: "⭐", name: "star", verts: starPts() },
     { key: "heart", label: "❤️", name: "heart", verts: heartPts() },
+    { key: "A", label: "A", name: "letter A", verts: [[0.15, 0.92], [0.5, 0.08], [0.85, 0.92], [0.71, 0.55], [0.29, 0.55]] },
+    { key: "square", label: "■", name: "square", verts: [[0.15, 0.15], [0.85, 0.15], [0.85, 0.85], [0.15, 0.85], [0.15, 0.15]] },
+    { key: "triangle", label: "▲", name: "triangle", verts: [[0.5, 0.1], [0.88, 0.85], [0.12, 0.85], [0.5, 0.1]] },
+    { key: "B", label: "B", name: "letter B", verts: [[0.27, 0.92], [0.27, 0.08], [0.6, 0.12], [0.7, 0.29], [0.6, 0.46], [0.3, 0.5], [0.64, 0.54], [0.74, 0.73], [0.62, 0.9], [0.27, 0.92]] },
+    { key: "diamond", label: "♦️", name: "diamond", verts: [[0.5, 0.06], [0.88, 0.5], [0.5, 0.94], [0.12, 0.5], [0.5, 0.06]] },
+    { key: "C", label: "C", name: "letter C", verts: (function () { const p = []; for (let a = 60; a <= 300; a += 15) { const r = (a * Math.PI) / 180; p.push([0.5 + 0.4 * Math.cos(r), 0.5 - 0.4 * Math.sin(r)]); } return p; })() },
+    { key: "D", label: "D", name: "letter D", verts: [[0.27, 0.92], [0.27, 0.08], [0.5, 0.08], [0.72, 0.18], [0.8, 0.35], [0.8, 0.65], [0.72, 0.82], [0.5, 0.92], [0.27, 0.92]] },
+    { key: "E", label: "E", name: "letter E", verts: [[0.3, 0.1], [0.75, 0.1], [0.3, 0.1], [0.3, 0.5], [0.68, 0.5], [0.3, 0.5], [0.3, 0.9], [0.75, 0.9]] },
   ];
 
   // Walk a polyline and emit evenly-spaced checkpoints (uniform difficulty).
@@ -50,11 +60,13 @@
     return out;
   }
 
-  let running = false, raf = null, canvas = null, c2d = null, bubble = null, chips = null;
+  let running = false, raf = null, canvas = null, c2d = null, bubble = null, chips = null, scoreEl = null;
   let figIndex = 0, cps = [], visited = [], index = 0, particles = [], done = false;
   let down = false, side = 0, ox = 0, oy = 0, dpr = 1;
 
   const toPx = (pt) => [ox + pt[0] * side, oy + pt[1] * side];
+  const unlockedCount = () => Math.max(1, Math.min(FIGS.length, App.state.get("traceUnlocked") || 4));
+  const activeFigs = () => FIGS.slice(0, unlockedCount());
 
   function resize() {
     if (!canvas) return;
@@ -66,9 +78,20 @@
     ox = (w - side) / 2; oy = (h - side) / 2;
   }
 
+  function renderChips() {
+    chips.innerHTML = "";
+    activeFigs().forEach((f, i) => {
+      chips.appendChild(App.fx.el("button", {
+        class: "chip" + (i === figIndex ? " is-on" : ""), text: f.label,
+        onpointerdown: (e) => { e.preventDefault(); App.audio.play("tap"); loadFigure(i); },
+      }));
+    });
+  }
+
   function loadFigure(i) {
-    figIndex = ((i % FIGS.length) + FIGS.length) % FIGS.length;
-    const fig = FIGS[figIndex];
+    const figs = activeFigs();
+    figIndex = ((i % figs.length) + figs.length) % figs.length;
+    const fig = figs[figIndex];
     cps = densify(fig.verts, 0.05);
     visited = cps.map(() => false);
     index = 0; done = false; particles = [];
@@ -103,19 +126,48 @@
     if (index >= cps.length && !done) complete();
   }
 
+  function maybeUnlockNext(doneCount) {
+    const total = FIGS.length;
+    const cur = unlockedCount();
+    if (cur >= total) return false;
+    if (doneCount > 0 && doneCount % 3 === 0) {
+      App.state.set("traceUnlocked", cur + 1);
+      return true;
+    }
+    return false;
+  }
+
   function complete() {
     done = true; down = false;
-    const fig = FIGS[figIndex];
-    // sparkle along the whole path
+    const figs = activeFigs();
+    const fig = figs[figIndex];
+
     for (let i = 0; i < cps.length; i += 2) {
       const [px, py] = toPx(cps[i]);
       const rect = canvas.getBoundingClientRect();
       setTimeout(() => App.fx.sparkleBurst(rect.left + px, rect.top + py, 3), i * 14);
     }
+
+    const doneCount = (App.state.get("tracesCompleted") || 0) + 1;
+    App.state.set("tracesCompleted", doneCount);
+    if (scoreEl) scoreEl.textContent = "👑 " + doneCount;
+    const unlocked = maybeUnlockNext(doneCount);
+
     App.fx.celebrate({
       message: "You traced the " + fig.name + "!",
       emoji: fig.label.length === 1 ? "🌟" : fig.label,
-      ondone: () => { if (running) loadFigure(figIndex + 1); },
+      ondone: () => {
+        if (!running) return;
+        if (unlocked) {
+          renderChips();
+          const justUnlocked = activeFigs()[unlockedCount() - 1];
+          App.audio.play("levelup");
+          App.audio.speak("You unlocked a new shape to trace! " + justUnlocked.name + ".");
+          setTimeout(() => loadFigure(figIndex + 1), 1600);
+        } else {
+          loadFigure(figIndex + 1);
+        }
+      },
     });
   }
 
@@ -124,7 +176,6 @@
     const w = canvas.clientWidth, h = canvas.clientHeight;
     c2d.clearRect(0, 0, w, h);
 
-    // guide path (soft dashed)
     c2d.lineCap = "round"; c2d.lineJoin = "round";
     c2d.strokeStyle = "rgba(183,139,255,0.35)";
     c2d.lineWidth = side * 0.085;
@@ -134,7 +185,6 @@
     c2d.stroke();
     c2d.setLineDash([]);
 
-    // traced portion (bright gold)
     if (index > 0) {
       c2d.strokeStyle = "#ffcf5c";
       c2d.lineWidth = side * 0.09;
@@ -143,7 +193,6 @@
       c2d.stroke();
     }
 
-    // start marker + pulsing "next" target
     if (!done) {
       const t = (Date.now() % 900) / 900;
       const [nx, ny] = toPx(cps[Math.min(index, cps.length - 1)]);
@@ -151,7 +200,6 @@
       c2d.fillStyle = "rgba(255,159,67,0.85)";
       c2d.arc(nx, ny, side * 0.05 * (1 + 0.3 * Math.sin(t * Math.PI * 2)), 0, Math.PI * 2);
       c2d.fill();
-      // start flag
       if (index === 0) {
         const [sx, sy] = toPx(cps[0]);
         c2d.font = (side * 0.1) + "px serif"; c2d.textAlign = "center"; c2d.textBaseline = "middle";
@@ -159,7 +207,6 @@
       }
     }
 
-    // glitter particles
     for (let i = particles.length - 1; i >= 0; i--) {
       const p = particles[i];
       p.x += p.vx; p.y += p.vy; p.life -= 0.03;
@@ -182,26 +229,22 @@
     bubble = App.fx.el("div", { class: "host__bubble", text: "Trace me!" });
     const host = App.fx.el("div", { class: "host" }, [fairy, bubble]);
 
+    scoreEl = App.fx.el("div", { class: "scoreboard", text: "👑 " + (App.state.get("tracesCompleted") || 0) });
+
     const wrap = App.fx.el("div", { class: "trace-wrap" });
     canvas = App.fx.el("canvas", { id: "trace-canvas" });
     wrap.appendChild(canvas);
 
     chips = App.fx.el("div", { class: "choice-row" });
-    FIGS.forEach((f, i) => {
-      chips.appendChild(App.fx.el("button", {
-        class: "chip", text: f.label,
-        onpointerdown: (e) => { e.preventDefault(); App.audio.play("tap"); loadFigure(i); },
-      }));
-    });
 
+    root.appendChild(scoreEl);
     root.appendChild(host);
     root.appendChild(wrap);
     root.appendChild(chips);
 
     c2d = canvas.getContext("2d");
     window.addEventListener("resize", resize);
-    // wait one frame so the canvas has size
-    requestAnimationFrame(() => { resize(); loadFigure(0); render(); });
+    requestAnimationFrame(() => { resize(); renderChips(); loadFigure(0); render(); });
 
     canvas.addEventListener("pointerdown", (e) => { e.preventDefault(); down = true; try { canvas.setPointerCapture(e.pointerId); } catch (x) {} handleMove(e); });
     canvas.addEventListener("pointermove", (e) => { e.preventDefault(); handleMove(e); });

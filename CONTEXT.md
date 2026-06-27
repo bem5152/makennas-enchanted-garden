@@ -6,7 +6,7 @@
 > 3. Keep the top sections current; demote finished items into the Changelog.
 > 4. Per CLAUDE.md: propose a plan and wait for Bret's approval before creating or editing files.
 
-*Last updated: June 27, 2026*
+*Last updated: June 27, 2026 (evening)*
 
 ---
 
@@ -14,7 +14,7 @@
 **Makenna's Enchanted Garden** — a collection of 5 educational mini-games for Bret's daughter Makenna (age 3). Disney-storybook themed, ad-free, no install required — opens directly in an iPad browser. A personal build, not a commercial venture.
 
 ## Status
-**Built and verified.** All 5 games fully playable, navigation working, audio confirmed, localStorage persistence confirmed. Not yet deployed to a live URL — sitting locally pending Bret's GitHub Pages / Vercel push.
+**Built, deployed, and live.** Public repo at github.com/bem5152/makennas-enchanted-garden, deployed via GitHub Pages at https://bem5152.github.io/makennas-enchanted-garden/. Iterating based on real iPad testing feedback.
 
 ## Tech Stack
 - Pure HTML/CSS/vanilla JavaScript — **no framework, no build step.** Static files only.
@@ -39,9 +39,10 @@
 | `.claude/launch.json` | Local dev-server launch config (`npx serve`) used for browser-preview testing |
 
 ## Open Items
-1. **Deploy** to GitHub Pages (or Vercel) and do a real on-device check in iPad Safari — touch + audio behave differently on real hardware than in a desktop preview.
-2. Optional: rename the app away from the placeholder title (currently "Makenna's Enchanted Garden" — already personalized, may not need changing).
+1. Confirm the new volume slider, voice picker, and gamification changes feel good on the actual iPad (this round was verified via headless browser preview, not the device yet).
+2. Optional: sourcing real recorded animal sound clips later instead of synthesized ones, if Bret decides authenticity matters more than staying file-free (deferred per his choice on 2026-06-27).
 3. Optional: add more letters/levels content over time as Makenna's skills grow (framework already supports unlocking).
 
 ## Changelog
-- **[2026-06-27]** Built and verified all 5 games end-to-end (Letter Forest, Princess Trace, Royal Memory Match, Color Kingdom, Animal Sounds Parade) plus home screen, router, audio engine, and effects engine. Found and fixed a real CSS bug during testing: `[hidden]` attribute was being overridden by component `display` rules, causing the celebration overlay and back button to render even when "hidden." Added a `[hidden] { display: none !important }` reset. Verified in browser preview at both 1024×768 and 768×1024, confirmed zero console errors, and confirmed localStorage persistence survives a reload. Not yet deployed — local only. CONTEXT.md created.
+- **[2026-06-27 evening]** Iterated based on real iPad testing feedback: (1) tuned speech pitch/rate toward neutral (was over-pitched, sounded robotic) and added an in-app voice picker since voice quality is otherwise capped by iOS's installed voices; (2) replaced the on/off mute button with a settings popover containing a volume slider (0–100%, persisted); (3) expanded Princess Trace from 6 to 11 figures (added D, E, square, triangle, diamond) with an unlock-progression system mirroring Letter Forest (starts with 4, unlocks one every 3 completed traces); (4) rewrote Animal Parade's sound effects using new Web Audio noise-burst and vibrato-tone primitives for distinctly animal-like (not just tonal) sounds, expanded from 8 to 16 animals, and added a persisted "sticker book" collection mechanic with a full-set celebration; (5) added a streak-based level system to Color Kingdom (1–5, persisted best level) that introduces combined color+shape prompts ("find the BLUE STAR") at level 3+. Verified all of it in browser preview — volume/voice persistence, migration from the old boolean mute, trace unlock progression, all 16 animal sounds firing with zero console errors, and the dual-attribute mode correctly rejecting partial-match decoys. Pushed to GitHub (`git push`); GitHub Pages auto-redeploys on push.
+- **[2026-06-27]** Built and verified all 5 games end-to-end (Letter Forest, Princess Trace, Royal Memory Match, Color Kingdom, Animal Sounds Parade) plus home screen, router, audio engine, and effects engine. Found and fixed a real CSS bug during testing: `[hidden]` attribute was being overridden by component `display` rules, causing the celebration overlay and back button to render even when "hidden." Added a `[hidden] { display: none !important }` reset. Verified in browser preview at both 1024×768 and 768×1024, confirmed zero console errors, and confirmed localStorage persistence survives a reload. Deployed: created public GitHub repo (bem5152/makennas-enchanted-garden), pushed via git (repo-local identity only, set with Bret's explicit OK), and enabled GitHub Pages — live at https://bem5152.github.io/makennas-enchanted-garden/. CONTEXT.md created.

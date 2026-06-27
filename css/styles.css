@@ -92,6 +92,75 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
 .round-btn__icon { font-size: 30px; line-height: 1; }
 .round-btn.back-btn { background: rgba(255,255,255,0.92); }
 
+/* ---------- Settings popover (volume slider + voice picker) ---------- */
+.settings-pop {
+  position: fixed;
+  top: max(86px, calc(env(safe-area-inset-top) + 78px));
+  right: 16px;
+  z-index: 40;
+  width: min(360px, 86vw);
+  background: #fff;
+  border-radius: 22px;
+  box-shadow: var(--shadow-lg);
+  padding: 16px 18px 14px;
+}
+.settings-pop__row { margin-bottom: 12px; }
+.settings-pop__row:last-child { margin-bottom: 0; }
+.settings-pop__label {
+  display: block; font-size: 18px; font-weight: 800; color: var(--ink); margin-bottom: 6px;
+}
+.settings-pop input[type="range"] {
+  width: 100%; height: 44px; -webkit-appearance: none; appearance: none; background: transparent;
+}
+.settings-pop input[type="range"]::-webkit-slider-runnable-track {
+  height: 10px; border-radius: 6px; background: linear-gradient(90deg, var(--rose), var(--purple));
+}
+.settings-pop input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 34px; height: 34px; border-radius: 50%;
+  background: #fff; border: 4px solid var(--purple); box-shadow: var(--shadow); margin-top: -12px;
+}
+.settings-pop input[type="range"]::-moz-range-track {
+  height: 10px; border-radius: 6px; background: linear-gradient(90deg, var(--rose), var(--purple));
+}
+.settings-pop input[type="range"]::-moz-range-thumb {
+  width: 34px; height: 34px; border-radius: 50%; background: #fff; border: 4px solid var(--purple);
+}
+.voice-list { display: flex; flex-wrap: wrap; gap: 8px; max-height: 160px; overflow-y: auto; }
+.voice-chip {
+  padding: 8px 14px; border-radius: 14px; background: var(--lav); font-size: 15px; font-weight: 700;
+  color: var(--ink); min-height: 40px;
+}
+.voice-chip.is-on { background: var(--gold); color: #6b4d00; }
+.voice-list__empty { font-size: 14px; color: var(--ink-soft); }
+.settings-pop__hint { font-size: 12px; color: var(--ink-soft); margin: 8px 0 0; line-height: 1.4; }
+
+/* ---------- Level / progress bar (Color Kingdom) ---------- */
+.level-pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: rgba(255,255,255,0.85); border-radius: 999px; padding: 6px 14px;
+  font-size: 18px; font-weight: 800; color: var(--ink); box-shadow: var(--shadow);
+}
+.level-bar {
+  width: clamp(140px, 30vw, 240px); height: 14px; border-radius: 8px;
+  background: rgba(255,255,255,0.6); overflow: hidden; box-shadow: inset 0 0 0 2px rgba(255,255,255,0.8);
+}
+.level-bar__fill {
+  height: 100%; border-radius: 8px;
+  background: linear-gradient(90deg, var(--gold), var(--rose));
+  transition: width .35s ease;
+}
+
+/* ---------- Sticker book counter (Animal Parade) ---------- */
+.sticker-row {
+  display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 6px;
+}
+.critter.is-found { box-shadow: 0 0 0 4px var(--gold), var(--shadow); }
+.new-badge {
+  position: absolute; top: -6px; right: -6px; background: var(--gold); color: #6b4d00;
+  font-size: 13px; font-weight: 800; padding: 3px 8px; border-radius: 999px;
+  animation: pop-in .4s ease;
+}
+
 /* ---------- Screens / router ---------- */
 .screen {
   position: fixed; inset: 0;
@@ -325,12 +394,14 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
 }
 @keyframes marquee { from { transform: translateX(0);} to { transform: translateX(-50%);} }
 .parade__row {
-  display: flex; flex-wrap: wrap; gap: clamp(10px, 2.4vw, 30px);
-  align-items: center; justify-content: center; padding: 18px;
+  display: flex; flex-wrap: wrap; gap: clamp(8px, 1.8vw, 20px);
+  align-items: center; justify-content: center; align-content: flex-start;
+  padding: 14px; flex: 1; overflow-y: auto;
 }
 .critter {
+  position: relative;
   pointer-events: auto;
-  font-size: clamp(64px, 12vw, 120px);
+  font-size: clamp(48px, 8vw, 84px);
   background: rgba(255,255,255,0.6);
   border-radius: 30px;
   padding: 10px 14px;
